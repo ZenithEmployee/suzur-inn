@@ -1,4 +1,4 @@
-<nav class="w-full px-4 lg:px-8 bg-background-secondary border-b border-neutral md:h-16 flex md:flex-row flex-col justify-between fixed top-0 z-20">
+<nav class="w-full px-4 lg:px-8 bg-background-secondary/80 backdrop-blur-md border-b border-neutral md:h-16 flex md:flex-row flex-col justify-between fixed top-0 z-20 shadow-sm">
     <div
         x-data="{ 
             slideOverOpen: false,
@@ -11,20 +11,20 @@
             :class="hasAside ? 'w-full' : 'container'">
 
             <div class="flex flex-row items-center">
-                <a href="{{ route('home') }}" class="flex flex-row items-center h-10 gap-2" wire:navigate>
+                <a href="{{ route('home') }}" class="flex flex-row items-center h-10 gap-2.5 group" wire:navigate>
                     <x-logo class="h-8" />
                     @if(theme('logo_display', 'logo-and-name') != 'logo-only')
-                    <span class="text-xl font-bold leading-none flex items-center">{{ config('app.name') }}</span>
+                    <span class="text-lg font-bold leading-none flex items-center tracking-tight zenith-gradient-text">{{ config('app.name') }}</span>
                     @endif
                 </a>
-                <div class="md:flex hidden flex-row ml-6">
+                <div class="md:flex hidden flex-row ml-8">
                     @foreach (\App\Classes\Navigation::getLinks() as $nav)
                     @if (isset($nav['children']) && count($nav['children']) > 0)
                     <div class="relative">
                         <x-dropdown>
                             <x-slot:trigger>
                                 <div class="flex flex-col">
-                                    <span class="flex flex-row items-center p-3 text-sm font-semibold whitespace-nowrap text-base hover:text-base/80">
+                                    <span class="flex flex-row items-center px-3 py-2 text-sm font-medium whitespace-nowrap text-base/70 hover:text-base transition-colors duration-200 rounded-lg hover:bg-primary/5">
                                         {{ $nav['name'] }}
                                     </span>
                                 </div>
@@ -44,7 +44,7 @@
                     <x-navigation.link
                         :href="$nav['url']"
                         :spa="isset($nav['spa']) ? $nav['spa'] : true"
-                        class="flex items-center p-3">
+                        class="flex items-center px-3 py-2 text-sm font-medium text-base/70 hover:text-base transition-colors duration-200 rounded-lg hover:bg-primary/5">
                         {{ $nav['name'] }}
                     </x-navigation.link>
                     @endif
@@ -56,25 +56,30 @@
                 </div>
             </div>
 
-            <div class="flex flex-row items-center">
+            <div class="flex flex-row items-center gap-1">
                 <livewire:components.cart />
 
-                <div class="items-center hidden md:flex mr-1">
+                <div class="items-center hidden md:flex">
                     <livewire:components.locale-switch />
                     <x-theme-toggle />
                 </div>
 
                 @if(auth()->check())
                 <livewire:components.notifications />
-                <div class="hidden lg:flex">
+                <div class="hidden lg:flex ml-1">
                     <x-dropdown :showArrow="false">
                         <x-slot:trigger>
-                            <img src="{{ auth()->user()->avatar }}" class="size-8 rounded-full border border-neutral bg-background" alt="avatar" />
+                            <div class="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-primary/8 transition-colors duration-200 cursor-pointer">
+                                <img src="{{ auth()->user()->avatar }}" class="size-8 rounded-full border-2 border-primary/30 bg-background object-cover" alt="avatar" />
+                                <div class="flex flex-col items-start leading-tight">
+                                    <span class="text-sm font-semibold text-base">{{ auth()->user()->name }}</span>
+                                </div>
+                            </div>
                         </x-slot:trigger>
                         <x-slot:content>
-                            <div class="flex flex-col p-2">
-                                <span class="text-sm text-base break-words">{{ auth()->user()->name }}</span>
-                                <span class="text-sm text-base break-words">{{ auth()->user()->email }}</span>
+                            <div class="flex flex-col p-3 border-b border-neutral mb-1">
+                                <span class="text-sm font-semibold text-base break-words">{{ auth()->user()->name }}</span>
+                                <span class="text-xs text-base/50 break-words mt-0.5">{{ auth()->user()->email }}</span>
                             </div>
                             @foreach (\App\Classes\Navigation::getAccountDropdownLinks() as $nav)
                             <x-navigation.link :href="$nav['url']" :spa="isset($nav['spa']) ? $nav['spa'] : true">
@@ -86,7 +91,7 @@
                     </x-dropdown>
                 </div>
                 @else
-                <div class="hidden lg:flex flex-row gap-3">
+                <div class="hidden lg:flex flex-row gap-2 ml-2">
                     <a href="{{ route('login') }}" wire:navigate>
                         <x-button.secondary>
                             {{ __('navigation.login') }}
@@ -103,7 +108,7 @@
                 @endif
                 <button
                     @click="slideOverOpen = !slideOverOpen"
-                    class="relative w-10 h-10 flex lg:hidden items-center justify-center rounded-lg hover:bg-neutral transition"
+                    class="relative w-9 h-9 flex lg:hidden items-center justify-center rounded-xl hover:bg-primary/10 transition-all duration-200 ml-1"
                     aria-label="Toggle Menu">
 
                     <span
@@ -148,13 +153,13 @@
                     x-show="slideOverOpen"
                     @click.away="slideOverOpen = false"
                     x-transition.opacity.duration.300ms
-                    class="absolute inset-0 bg-background-secondary border-t border-neutral shadow-lg overflow-y-auto flex flex-col">
+                    class="absolute inset-0 bg-background-secondary/95 backdrop-blur-sm border-t border-neutral shadow-xl overflow-y-auto flex flex-col">
 
-                    <div class="flex flex-col h-full p-4">
+                    <div class="flex flex-col h-full p-5">
                         <div class="flex-1 min-h-0 overflow-y-auto">
                             <x-navigation.sidebar-links />
                         </div>
-                        <div class="mt-5">
+                        <div class="mt-5 border-t border-neutral pt-5">
                             @if(auth()->check())
 
                             <div
@@ -163,11 +168,11 @@
                                 x-cloak
                                 class="relative">
 
-                                <button @click="userPanelOpen = true" aria-label="Open user menu" class="flex gap-4 items-center justify-start">
-                                    <img src="{{ auth()->user()->avatar }}" class="size-10 rounded-full border border-neutral bg-background" alt="avatar" />
+                                <button @click="userPanelOpen = true" aria-label="Open user menu" class="flex gap-3 items-center justify-start w-full p-2 rounded-xl hover:bg-primary/8 transition-colors">
+                                    <img src="{{ auth()->user()->avatar }}" class="size-10 rounded-full border-2 border-primary/30 bg-background object-cover" alt="avatar" />
                                     <div class="flex flex-col items-start gap-0.5">
-                                        <span class="font-bold text-md">{{ auth()->user()->name }}</span>
-                                        <span class="text-sm text-base/70">{{ auth()->user()->email }}</span>
+                                        <span class="font-semibold text-sm">{{ auth()->user()->name }}</span>
+                                        <span class="text-xs text-base/50">{{ auth()->user()->email }}</span>
                                     </div>
                                 </button>
 
@@ -196,16 +201,17 @@
                                     @click.away="userPanelOpen = false"
                                     tabindex="-1"
                                     aria-modal="true">
-                                    <div class="bg-background-secondary shadow-lg rounded-t-2xl border border-neutral p-6">
-                                        <div class="flex gap-4 items-center justify-start">
-                                            <img src="{{ auth()->user()->avatar }}" class="size-12 rounded-full border border-neutral bg-background" alt="avatar" />
+                                    <div class="bg-background-secondary shadow-2xl rounded-t-3xl border border-neutral p-6">
+                                        <div class="w-10 h-1 rounded-full bg-neutral mx-auto mb-5"></div>
+                                        <div class="flex gap-3 items-center justify-start">
+                                            <img src="{{ auth()->user()->avatar }}" class="size-12 rounded-full border-2 border-primary/30 bg-background object-cover" alt="avatar" />
                                             <div class="flex flex-col gap-0.5">
-                                                <span class="font-bold text-lg">{{ auth()->user()->name }}</span>
-                                                <span class="text-sm text-base/70">{{ auth()->user()->email }}</span>
+                                                <span class="font-bold text-base">{{ auth()->user()->name }}</span>
+                                                <span class="text-sm text-base/50">{{ auth()->user()->email }}</span>
                                             </div>
                                         </div>
-                                        <div class="h-px w-full bg-neutral my-6"></div>
-                                        <div class="mt-4 flex flex-col gap-2 w-full">
+                                        <div class="h-px w-full bg-neutral my-5"></div>
+                                        <div class="flex flex-col gap-1 w-full">
                                             @foreach (\App\Classes\Navigation::getAccountDropdownLinks() as $nav)
                                             <x-navigation.link :href="$nav['url']" :spa="isset($nav['spa']) ? $nav['spa'] : true">
                                                 {{ $nav['name'] }}
@@ -218,7 +224,7 @@
                             </div>
 
                             @else
-                            <div class="flex flex-col gap-3 mb-3">
+                            <div class="flex flex-col gap-2 mb-3">
                                 @if(!config('settings.registration_disabled', false))
                                 <a href="{{ route('register') }}" wire:navigate>
                                     <x-button.primary>

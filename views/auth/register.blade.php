@@ -1,9 +1,12 @@
 <form
-    class="mx-auto flex flex-col gap-2 mt-4 px-6 sm:px-14 pb-10 bg-primary-800 rounded-md xl:max-w-[60%] w-full"
+    class="mx-auto flex flex-col gap-3 mt-4 px-6 sm:px-10 pb-10 rounded-2xl border border-neutral bg-background-secondary/80 backdrop-blur-md shadow-xl xl:max-w-[58%] w-full animate-fade-up"
     wire:submit.prevent="submit" id="register">
-    <div class="flex flex-col items-center my-14">
-        <x-logo class="h-10" />
-        <h1 class="text-2xl text-center mt-6">{{ __('auth.sign_up_title') }} </h1>
+    <div class="flex flex-col items-center my-10">
+        <div class="mb-4 p-3 rounded-2xl bg-primary/10 border border-primary/20">
+            <x-logo class="h-8" />
+        </div>
+        <h1 class="text-2xl font-bold text-center mt-3 tracking-tight">{{ __('auth.sign_up_title') }}</h1>
+        <p class="text-sm text-base/50 mt-1">{{ config('app.name') }}</p>
     </div>
     <div class="flex flex-col md:grid md:grid-cols-2 gap-4">
         <x-form.input name="first_name" type="text" :label="__('general.input.first_name')"
@@ -24,7 +27,7 @@
         @if(config('settings.tos'))
             <x-form.checkbox wire:model="tos" name="tos" required>
                 {{ __('product.tos') }}
-                <a href="{{ config('settings.tos') }}" target="_blank" class="text-primary hover:text-primary/80">
+                <a href="{{ config('settings.tos') }}" target="_blank" class="text-primary hover:text-primary/80 underline">
                     {{ __('product.tos_link') }}
                 </a>
             </x-form.checkbox>
@@ -33,11 +36,11 @@
 
     <x-captcha :form="'register'" />
 
-    <x-button.primary class="w-full mt-2">{{ __('auth.sign_up') }}</x-button.primary>
+    <x-button.primary class="w-full mt-2" type="submit">{{ __('auth.sign_up') }}</x-button.primary>
 
-    <div class="text-base text-center rounded-md py-2 mt-6 text-sm">
-        {{ __('auth.already_have_account') }}
-        <a class="text-sm text-secondary-500 text-secondary hover:underline" href="{{ route('login') }}" wire:navigate>
+    <div class="text-center rounded-xl py-3 mt-2 text-sm border border-neutral bg-background/50">
+        <span class="text-base/50">{{ __('auth.already_have_account') }}</span>
+        <a class="text-sm text-primary hover:text-primary/80 font-medium hover:underline ml-1" href="{{ route('login') }}" wire:navigate>
             {{ __('auth.sign_in') }}
         </a>
     </div>
