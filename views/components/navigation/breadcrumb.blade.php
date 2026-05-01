@@ -33,29 +33,29 @@
     }
 @endphp
 
-<div class="flex flex-row items-center pb-4">
+<div class="flex flex-row items-center gap-1.5 pb-4">
     @if (!empty($breadcrumbs))
         @foreach ($breadcrumbs as $index => $breadcrumb)
             @if ($index > 0)
-                <x-ri-arrow-right-s-line class="size-4 text-base mx-2" />
+                <x-ri-arrow-right-s-line class="size-4 text-base/30" />
             @endif
 
             @if (count($breadcrumbs) === 1)
-                <span class="text-2xl font-bold">
+                <h1 class="text-2xl font-bold tracking-tight">
                     {{ $breadcrumb['name'] ?? '' }}
-                </span>
+                </h1>
             @elseif ($index === count($breadcrumbs) - 1)
-                <span class="text-base/80 font-semibold">
+                <span class="text-sm font-semibold text-base/70">
                     {{ $breadcrumb['name'] ?? '' }}
                 </span>
             @else
-                <a href="{{ isset($breadcrumb['route']) ? route($breadcrumb['route'], $breadcrumb['params'] ?? []) : '#' }}" 
-                   class="text-lg font-bold hover:text-primary">
+                <a href="{{ isset($breadcrumb['route']) ? route($breadcrumb['route'], $breadcrumb['params'] ?? []) : '#' }}"
+                   class="text-xl font-bold tracking-tight hover:text-primary transition-colors duration-200">
                     {{ $breadcrumb['name'] ?? '' }}
                 </a>
             @endif
         @endforeach
     @else
-        <span class="text-lg font-bold">{{ __('navigation.home') }}</span>
+        <h1 class="text-2xl font-bold tracking-tight">{{ __('navigation.home') }}</h1>
     @endif
 </div>

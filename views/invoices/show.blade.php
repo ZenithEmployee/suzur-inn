@@ -1,205 +1,184 @@
-<div class="container mt-14">
+<div class="container mt-12 pb-16">
     <div @if ($checkPayment) wire:poll.5s="checkPaymentStatus" @endif>
         @if ($this->pay || $showPayModal)
         @include('invoices.partials.payment-modal')
         @endif
 
-        <div class="flex justify-end">
-            <div class="max-w-[200px] w-full text-right">
-                <span class="cursor-pointer text-base underline" wire:click="downloadPDF">
-                    <span wire:loading wire:target="downloadPDF">
-                        <x-ri-loader-5-fill class="size-6 animate-spin" />
-                    </span>
-                    <span wire:loading.remove wire:target="downloadPDF">
-                        {{ __('invoices.download_pdf') }}
-                    </span>
-                </span>
+        {{-- Header con acciones --}}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">
+                    {{ !$invoice->number && config('settings.invoice_proforma', false) ? __('invoices.proforma_invoice', ['id' => $invoice->id]) : __('invoices.invoice', ['id' => $invoice->number]) }}
+                </h1>
+                <p class="text-sm text-base/50 mt-0.5">{{ $invoice->created_at->format('d M Y') }}</p>
             </div>
+            <button class="flex items-center gap-2 text-sm font-medium text-base/60 hover:text-primary bg-background border border-neutral hover:border-primary/40 hover:bg-primary/5 px-3 py-2 rounded-xl transition-all duration-200" wire:click="downloadPDF">
+                <span wire:loading wire:target="downloadPDF">
+                    <x-ri-loader-5-fill class="size-4 animate-spin" />
+                </span>
+                <span wire:loading.remove wire:target="downloadPDF">
+                    <x-ri-download-2-line class="size-4" />
+                </span>
+                {{ __('invoices.download_pdf') }}
+            </button>
         </div>
 
-        <div class="bg-background-secondary border border-neutral p-12 rounded-lg mt-2">
-            <h1 class="text-2xl font-bold sm:text-3xl">
-                {{ !$invoice->number && config('settings.invoice_proforma', false) ? __('invoices.proforma_invoice', ['id'
-            => $invoice->id]) : __('invoices.invoice', ['id' => $invoice->number]) }}
-            </h1>
-            <div class="sm:flex justify-between pr-4 pt-4">
-                <div class="mt-4 sm:mt-0">
-                    <p class="uppercase font-bold">{{ __('invoices.issued_to') }}</p>
-                    <p>{{ $invoice->user_name }}</p>
+        <div class="card p-6 md:p-10">
+            {{-- Encabezado de factura --}}
+            <div class="sm:flex justify-between gap-8 pb-6 border-b border-neutral">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-base/40 mb-1">{{ __('invoices.issued_to') }}</p>
+                    <p class="text-sm font-semibold">{{ $invoice->user_name }}</p>
                     @foreach($invoice->user_properties as $property)
-                    <p>{{ $property }}</p>
+                    <p class="text-sm text-base/60">{{ $property }}</p>
                     @endforeach
                 </div>
-                <div class="mt-4 sm:mt-0 text-right">
-                    <p class="uppercase font-bold">{{ __('invoices.bill_to') }}</p>
-                    <p>{!! nl2br(e($invoice->bill_to)) !!}</p>
+                <div class="text-right mt-4 sm:mt-0">
+                    <p class="text-xs font-bold uppercase tracking-wider text-base/40 mb-1">{{ __('invoices.bill_to') }}</p>
+                    <p class="text-sm text-base/70">{!! nl2br(e($invoice->bill_to)) !!}</p>
                 </div>
             </div>
-            <div class="sm:flex justify-between pr-4 pt-4 mt-6">
-                <div class="">
-                    <p class="text-base">{{ !$invoice->number && config('settings.invoice_proforma', false) ?
-                    __('invoices.proforma_invoice_date') : __('invoices.invoice_date') }}: {{
-                    $invoice->created_at->format('d M Y') }}</p>
+
+            {{-- Fechas y estado --}}
+            <div class="sm:flex justify-between items-start pt-6 pb-6 border-b border-neutral">
+                <div class="space-y-1">
+                    <p class="text-sm text-base/60">
+                        <span class="font-medium text-base">{{ !$invoice->number && config('settings.invoice_proforma', false) ? __('invoices.proforma_invoice_date') : __('invoices.invoice_date') }}:</span>
+                        {{ $invoice->created_at->format('d M Y') }}
+                    </p>
                     @if($invoice->due_at)
-                    <p class="text-base">{{ __('invoices.due_date') }}: {{ $invoice->due_at->format('d M Y') }}</p>
+                    <p class="text-sm text-base/60">
+                        <span class="font-medium text-base">{{ __('invoices.due_date') }}:</span>
+                        {{ $invoice->due_at->format('d M Y') }}
+                    </p>
                     @endif
                     @if($invoice->number)
-                    <p class="text-base">{{ __('invoices.invoice_no')}}: {{ $invoice->number }}</p>
+                    <p class="text-sm text-base/60">
+                        <span class="font-medium text-base">{{ __('invoices.invoice_no')}}:</span>
+                        {{ $invoice->number }}
+                    </p>
                     @endif
                 </div>
-                <div class="max-w-[300px] w-full">
+                <div class="mt-4 sm:mt-0 text-right">
                     @if ($invoice->status == 'paid')
-                    <div class="text-green-500 mt-6 text-lg text-center font-semibold">
+                    <span class="text-sm font-bold px-4 py-2 rounded-xl bg-success/10 border border-success/20 text-success">
+                        <x-ri-checkbox-circle-fill class="inline size-4 mr-1" />
                         {{ __('invoices.paid') }}
-                    </div>
+                    </span>
                     @elseif ($invoice->status == 'pending')
                     @if($checkPayment || $invoice->transactions->where('status', \App\Enums\InvoiceTransactionStatus::Processing)->where('created_at', '>=', now()->subDays(1))->count() > 0)
-                    <div class="text-yellow-500 mb-6 text-lg text-center flex items-center justify-center">
+                    <div class="flex items-center justify-end gap-2 text-sm font-semibold text-warning">
                         {{ __('invoices.payment_processing') }}
-                        <x-ri-loader-5-fill aria-hidden="true" class="size-6 ms-2 fill-yellow-600 animate-spin" />
+                        <x-ri-loader-5-fill aria-hidden="true" class="size-4 fill-warning animate-spin" />
                     </div>
                     @else
-                    <div class="mb-6 text-lg text-center">
+                    <div class="flex flex-col items-end gap-3">
                         @if($invoice->transactions->where('status', \App\Enums\InvoiceTransactionStatus::Processing)->count() > 0)
-                        <span class="text-yellow-500">{{ __('invoices.payment_processing') }}</span>
-                        <p class="text-sm">{{ __('invoices.duplicate_payment') }}</p>
+                        <span class="text-sm font-semibold text-warning">{{ __('invoices.payment_processing') }}</span>
+                        <p class="text-xs text-base/50">{{ __('invoices.duplicate_payment') }}</p>
                         @else
-                        <span class="text-yellow-500">{{ __('invoices.payment_pending') }}</span>
+                        <span class="text-sm font-semibold text-warning">{{ __('invoices.payment_pending') }}</span>
                         @endif
+                        <x-button.primary wire:click="$set('showPayModal', true)" class="!w-auto" wire:loading.attr="disabled" wire:target="$set('showPayModal')">
+                            <x-ri-bank-card-line class="size-4" />
+                            <span wire:loading wire:target="pay">{{ __('invoices.processing') }}</span>
+                            <span wire:loading.remove wire:target="pay">{{ __('invoices.pay') }}</span>
+                        </x-button.primary>
                     </div>
-                    <x-button.primary wire:click="$set('showPayModal', true)" class="mt-2" wire:loading.attr="disabled"
-                        wire:target="$set('showPayModal')">
-                        <span wire:loading wire:target="pay">Processing...</span>
-                        <span wire:loading.remove wire:target="pay">Pay</span>
-                    </x-button.primary>
                     @endif
                     @endif
                 </div>
             </div>
 
-            <div class="mt-12 border-b border-neutral overflow-x-auto">
+            {{-- Tabla de ítems --}}
+            <div class="mt-6 overflow-x-auto">
                 <table class="w-full">
-                    <thead class="bg-background border border-neutral rounded-lg">
-                        <tr>
-                            <th scope="col"
-                                class="p-4 text-xs font-semibold tracking-wider text-left uppercase rounded-l-lg">
-                                {{ __('invoices.item') }}
-                            </th>
-                            <th scope="col" class="p-4 text-xs font-semibold tracking-wider text-left uppercase">
-                                {{ __('invoices.price') }}
-                            </th>
-                            <th scope="col" class="p-4 text-xs font-semibold tracking-wider text-left uppercase">
-                                {{ __('invoices.quantity') }}
-                            </th>
-                            <th scope="col"
-                                class="p-4 text-xs font-semibold tracking-wider text-left uppercase rounded-r-lg">
-                                {{ __('invoices.total') }}
-                            </th>
+                    <thead>
+                        <tr class="border-b border-neutral">
+                            <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.item') }}</th>
+                            <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.price') }}</th>
+                            <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.quantity') }}</th>
+                            <th class="pb-3 text-xs font-bold uppercase tracking-wider text-right text-base/40">{{ __('invoices.total') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-neutral">
                         @foreach ($invoice->items as $item)
                         <tr>
-                            <td class="p-4 font-normal whitespace-nowrap">
+                            <td class="py-3 text-sm">
                                 @if(in_array($item->reference_type, ['App\Models\Service', 'App\Models\ServiceUpgrade']))
                                 <a href="{{ route('services.show', $item->reference_type == 'App\Models\Service' ? $item->reference_id : $item->reference->service_id) }}"
-                                    class="hover:underline underline-offset-2">{{ $item->description }}
-                                </a>
+                                    class="hover:text-primary transition-colors hover:underline underline-offset-2">{{ $item->description }}</a>
                                 @else
                                 {{ $item->description }}
                                 @endif
                             </td>
-                            <td class="p-4 font-normal whitespace-nowrap text-base">{{ $item->formattedPrice }}
-                            </td>
-                            <td class="p-4 font-normal whitespace-nowrap">{{ $item->quantity }}</td>
-                            <td class="p-4 whitespace-nowrap font-semibold">{{ $item->formattedTotal }}</td>
+                            <td class="py-3 text-sm text-base/60">{{ $item->formattedPrice }}</td>
+                            <td class="py-3 text-sm text-base/60">{{ $item->quantity }}</td>
+                            <td class="py-3 text-sm font-semibold text-right">{{ $item->formattedTotal }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            <div class="space-y-3 sm:text-right sm:ml-auto sm:w-72 mt-10">
-                @if ($invoice->formattedTotal->tax > 0)
-                <div class="flex justify-between">
-                    <div class="text-sm font-medium text-gray-500 uppercase dark:text-base">{{ __('invoices.subtotal') }}
+
+            {{-- Totales --}}
+            <div class="mt-6 flex justify-end">
+                <div class="w-full sm:max-w-xs space-y-2">
+                    @if ($invoice->formattedTotal->tax > 0)
+                    <div class="flex justify-between text-sm text-base/60">
+                        <span>{{ __('invoices.subtotal') }}</span>
+                        <span>{{ $invoice->formattedTotal->format($invoice->formattedTotal->subtotal) }}</span>
                     </div>
-                    <div class="text-base font-medium text-gray-900 dark:text-white">
-                        {{ $invoice->formattedTotal->format($invoice->formattedTotal->subtotal) }}
+                    <div class="flex justify-between text-sm text-base/60">
+                        <span>{{ $invoice->tax->name }} ({{ $invoice->tax->rate }}%)</span>
+                        <span>{{ $invoice->formattedTotal->formatted->tax }}</span>
                     </div>
-                </div>
-                <div class="flex justify-between">
-                    <div class="text-sm font-medium text-gray-500 uppercase dark:text-base">
-                        {{ $invoice->tax->name }} ({{ $invoice->tax->rate }}%)
-                    </div>
-                    <div class="text-base font-medium text-gray-900 dark:text-white">
-                        {{ $invoice->formattedTotal->formatted->tax }}
-                    </div>
-                </div>
-                @endif
-                <div class="flex justify-between">
-                    <div class="text-base font-semibold text-gray-900 uppercase dark:text-white">Total</div>
-                    <div class="text-base font-bold text-gray-900 dark:text-white">
-                        {{ $invoice->formattedTotal }}
+                    @endif
+                    <div class="flex justify-between font-bold text-base pt-2 border-t border-neutral">
+                        <span>{{ __('invoices.total') }}</span>
+                        <span class="zenith-gradient-text text-lg">{{ $invoice->formattedTotal }}</span>
                     </div>
                 </div>
             </div>
 
+            {{-- Transacciones --}}
             @if ($invoice->transactions->isNotEmpty())
-            <div class="mt-12">
-                <h2 class="text-2xl font-bold">{{ __('invoices.transactions') }}</h2>
-                <div class="mt-4 overflow-x-auto">
+            <div class="mt-10 pt-8 border-t border-neutral">
+                <h2 class="text-base font-bold mb-4">{{ __('invoices.transactions') }}</h2>
+                <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-background border border-neutral rounded-lg">
-                            <tr>
-                                <th scope="col"
-                                    class="p-4 text-xs font-semibold tracking-wider text-left uppercase rounded-l-lg">
-                                    {{ __('invoices.date') }}
-                                </th>
-                                <th scope="col" class="p-4 text-xs font-semibold tracking-wider text-left uppercase">
-                                    {{ __('invoices.transaction_id') }}
-                                </th>
-                                <th scope="col" class="p-4 text-xs font-semibold tracking-wider text-left uppercase">
-                                    {{ __('invoices.gateway') }}
-                                </th>
-                                <th scope="col" class="p-4 text-xs font-semibold tracking-wider text-left uppercase">
-                                    {{ __('invoices.amount') }}
-                                </th>
-                                <th scope="col"
-                                    class="p-4 text-xs font-semibold tracking-wider text-left uppercase rounded-r-lg">
-                                    {{ __('invoices.status') }}
-                                </th>
+                        <thead>
+                            <tr class="border-b border-neutral">
+                                <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.date') }}</th>
+                                <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.transaction_id') }}</th>
+                                <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.gateway') }}</th>
+                                <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.amount') }}</th>
+                                <th class="pb-3 text-xs font-bold uppercase tracking-wider text-left text-base/40">{{ __('invoices.status') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-neutral">
                             @foreach ($invoice->transactions->sortByDesc('created_at') as $transaction)
                             <tr>
-                                <td class="p-4 font-normal whitespace-nowrap">
-                                    {{ $transaction->created_at->format('d M Y H:i') }}
-                                </td>
-                                <td class="p-4 font-normal whitespace-nowrap">{{ $transaction->transaction_id }}
-                                </td>
-                                <td class="p-4 font-normal whitespace-nowrap">
+                                <td class="py-3 text-sm text-base/70">{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                                <td class="py-3 text-sm text-base/70 font-mono text-xs">{{ $transaction->transaction_id }}</td>
+                                <td class="py-3 text-sm text-base/70">
                                     @if($transaction->is_credit_transaction)
                                     {{ __('invoices.paid_with_credits') }}
                                     @else
                                     {{ $transaction->gateway?->name }}
                                     @endif
                                 </td>
-                                <td class="p-4 font-normal whitespace-nowrap">{{ $transaction->formattedAmount }}
-                                </td>
-                                <td class="p-4 font-normal whitespace-nowrap">
+                                <td class="py-3 text-sm font-semibold">{{ $transaction->formattedAmount }}</td>
+                                <td class="py-3">
                                     @if($transaction->status == \App\Enums\InvoiceTransactionStatus::Succeeded)
-                                    <span class="text-green-600 font-semibold">{{
-                                    __('invoices.transaction_statuses.succeeded') }}</span>
+                                    <span class="text-xs font-medium px-2.5 py-1 rounded-lg bg-success/10 border border-success/20 text-success">{{ __('invoices.transaction_statuses.succeeded') }}</span>
                                     @elseif($transaction->status == \App\Enums\InvoiceTransactionStatus::Processing)
-                                    <span class="text-yellow-600 font-semibold flex items-center">
+                                    <span class="text-xs font-medium px-2.5 py-1 rounded-lg bg-warning/10 border border-warning/20 text-warning flex items-center gap-1 w-fit">
                                         {{ __('invoices.transaction_statuses.processing') }}
-                                        <x-ri-loader-5-fill aria-hidden="true"
-                                            class="size-6 me-2 fill-yellow-600 animate-spin" />
+                                        <x-ri-loader-5-fill aria-hidden="true" class="size-3.5 animate-spin" />
                                     </span>
                                     @elseif($transaction->status == \App\Enums\InvoiceTransactionStatus::Failed)
-                                    <span class="text-red-600 font-semibold">{{ __('invoices.transaction_statuses.failed')
-                                    }}</span>
+                                    <span class="text-xs font-medium px-2.5 py-1 rounded-lg bg-error/10 border border-error/20 text-error">{{ __('invoices.transaction_statuses.failed') }}</span>
                                     @endif
                                 </td>
                             </tr>
@@ -209,8 +188,6 @@
                 </div>
             </div>
             @endif
-
         </div>
-
     </div>
 </div>

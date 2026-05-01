@@ -1,44 +1,52 @@
-<div class="container mt-14 space-y-4">
+<div class="container mt-12 pb-16">
     <x-navigation.breadcrumb />
-
-    @forelse ($invoices as $invoice)
-    <a href="{{ route('invoices.show', $invoice) }}" wire:navigate>
-        <div class="bg-background-secondary hover:bg-background-secondary/80 border border-neutral p-4 rounded-lg mb-4">
-        <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-3">
-            <div class="bg-secondary/10 p-2 rounded-lg">
-                <x-ri-bill-line class="size-5 text-secondary" />
+    <div class="mt-6 space-y-3">
+        @forelse ($invoices as $invoice)
+        <a href="{{ route('invoices.show', $invoice) }}" wire:navigate>
+            <div class="group card p-4 hover:border-primary/30 hover:shadow-sm hover:shadow-primary/5 transition-all duration-200 mb-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-primary/10 border border-primary/20 p-2.5 rounded-xl shrink-0">
+                            <x-ri-receipt-line class="size-4 text-primary" />
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-sm group-hover:text-primary transition-colors duration-200">
+                                    {{ !$invoice->number && config('settings.invoice_proforma', false) ? __('invoices.proforma_invoice', ['id' => $invoice->id]) : __('invoices.invoice', ['id' => $invoice->number]) }}
+                                </span>
+                                <span class="text-xs font-bold text-primary">{{ $invoice->formattedTotal }}</span>
+                            </div>
+                            @foreach ($invoice->items as $item)
+                            <p class="text-xs text-base/50 mt-0.5">{{ $item->description }} &mdash; {{ $invoice->created_at->format('d M Y') }}</p>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-lg border
+                            @if ($invoice->status == 'paid') text-success bg-success/10 border-success/20
+                            @elseif($invoice->status == 'cancelled') text-inactive bg-inactive/10 border-inactive/20
+                            @else text-warning bg-warning/10 border-warning/20
+                            @endif">
+                            @if ($invoice->status == 'paid') <x-ri-checkbox-circle-fill class="inline size-3 mr-1" />
+                            @elseif($invoice->status == 'cancelled') <x-ri-forbid-fill class="inline size-3 mr-1" />
+                            @elseif($invoice->status == 'pending') <x-ri-error-warning-fill class="inline size-3 mr-1" />
+                            @endif
+                            {{ $invoice->status }}
+                        </span>
+                        <x-ri-arrow-right-s-line class="size-4 text-base/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
+                    </div>
+                </div>
             </div>
-            <span class="font-medium">{{ !$invoice->number && config('settings.invoice_proforma', false) ? __('invoices.proforma_invoice', ['id' => $invoice->id]) : __('invoices.invoice', ['id' => $invoice->number]) }}</span>
-            <span class="text-base/50 font-semibold">
-                <x-ri-circle-fill class="size-1 text-base/20" />
-            </span>
-            <span class="text-base text-sm">{{ $invoice->formattedTotal }}</span>
+        </a>
+        @empty
+        <div class="card p-8 flex flex-col items-center gap-3 text-center">
+            <div class="bg-primary/10 border border-primary/20 p-4 rounded-2xl">
+                <x-ri-receipt-line class="size-6 text-primary/60" />
             </div>
-            <div class="size-5 rounded-md p-0.5
-                @if ($invoice->status == 'paid') text-success bg-success/20
-                @elseif($invoice->status == 'cancelled') text-info bg-info/20
-                @else text-warning bg-warning/20
-                @endif">
-                @if ($invoice->status == 'paid')
-                    <x-ri-checkbox-circle-fill />
-                @elseif($invoice->status == 'cancelled')
-                    <x-ri-forbid-fill />
-                @elseif($invoice->status == 'pending')
-                    <x-ri-error-warning-fill />
-                @endif
-            </div>
+            <p class="text-sm text-base/50">{{ __('invoices.no_invoices') }}</p>
         </div>
-        @foreach ($invoice->items as $item)
-            <p class="text-base text-sm">Item(s): {{ $item->description }} ({{ __('invoices.invoice_date')}}: {{ $invoice->created_at->format('d M Y') }})</p>
-        @endforeach
-        </div>
-    </a>
-    @empty
-    <div class="bg-background-secondary border border-neutral p-4 rounded-lg">
-        <p class="text-base text-sm">{{ __('invoices.no_invoices') }}</p>
+        @endforelse
     </div>
-    @endforelse
 
     {{ $invoices->links() }}
 </div>

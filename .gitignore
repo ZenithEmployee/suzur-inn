@@ -1,8 +1,26 @@
-node_modules/
-vendor/
+# Dependencies
+/vendor/
+/node_modules/
+/themes/default/node_modules/
+
+# Compiled assets
+/public/default/
+/public/build/
+/public/hot
+
+# Environment & secrets
 .env
 .env.*
-storage/
-bootstrap/cache/
-public/default/assets/
-public/default/manifest.json
+!.env.example
+
+# Laravel cache
+/bootstrap/cache/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+/extensions/
