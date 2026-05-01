@@ -1,0 +1,8 @@
+node_modules/
+vendor/
+.env
+.env.*
+storage/
+bootstrap/cache/
+public/default/assets/
+public/default/manifest.json
